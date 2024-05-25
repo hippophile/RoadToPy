@@ -1,4 +1,6 @@
-import requests
+# word scrapping code
+
+import requests   # not my code 
 from bs4 import BeautifulSoup
 import csv
 
