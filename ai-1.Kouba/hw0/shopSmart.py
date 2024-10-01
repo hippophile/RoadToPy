@@ -34,15 +34,17 @@ def shopSmart(orderList, fruitShops):
     bestShop = None
     lowestCost = float('inf')
 
-    # Βρόχος για κάθε κατάστημα
+   
     for shop in fruitShops:
         totalCost = 0
-        # Υπολογισμός του συνολικού κόστους για την παραγγελία σε αυτό το κατάστημα
+        
+        # calculate the total cost of the list on this shop
         for fruit, weight in orderList:
             cost = shop.getCostPerPound(fruit)
             if cost is not None:
                 totalCost += cost * weight
-        # Έλεγχος αν αυτό το κατάστημα έχει το χαμηλότερο κόστος
+                
+        # check if the shop has the lowest prices
         if totalCost < lowestCost:
             lowestCost = totalCost
             bestShop = shop
