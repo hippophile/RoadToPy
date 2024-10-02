@@ -110,7 +110,7 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
         for successor, action, step_cost in problem.getSuccessors(state):
             if successor not in visited:
-                new_path = path + [action]
+                new_path = path + [action] 
                 fringe.push((successor, new_path))
 
     return[]
