@@ -108,7 +108,8 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
         if state not in visited:
             visited.add(state)
 
-        for successor, action, step_cost in problem.getSuccessors(state):
+            # that's were the magic is happening
+        for successor, action, stepCost in problem.getSuccessors(state):  # stepCost doesn't do anything but is essentiall, but is needed for the getSuccessors fun
             if successor not in visited:
                 new_path = path + [action] 
                 fringe.push((successor, new_path))
