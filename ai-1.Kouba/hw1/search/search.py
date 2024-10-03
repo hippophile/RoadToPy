@@ -121,6 +121,33 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+
+    fringe = util.Queue()
+
+    start_state = problem.getStartState()  # we need the first state and an empty path
+
+    fringe.push((start_state, [])) # state , path
+
+    visited = set() # a set to store the visited states
+
+    while not fringe.isEmpty():
+        state, path = fringe.pop() # tuple
+
+        if problem.isGoalState(state):
+            return path
+        
+        if state not in visited:
+            visited.add(state)
+
+            # that's were the magic is happening
+        for successor, action, stepCost in problem.getSuccessors(state):  # stepCost doesn't do anything but is essentiall, but is needed for the getSuccessors fun
+            if successor not in visited:
+                visited.add(successor)
+                new_path = path + [action] 
+                fringe.push((successor, new_path))
+
+    return[]
+
     util.raiseNotDefined()
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
