@@ -384,7 +384,19 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+
+    current_position, remaining_corners = state
+
+    if not remaining_corners:
+        return 0 
+    
+    distances = []
+
+    for corner in remaining_corners:
+        distance = manhattanHeuristic(current_position, corner)  # OR distance = aStarDistance(current_position, corner, walls)?
+        distance.append(distances)
+
+    return max(distances) # Default to trivial solution
 
 
 
@@ -475,8 +487,19 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
 
+    food_positions = foodGrid.asList()
+
+    if not food_positions:
+        return 0
+
+    distances = []
+
+    for food in food_positions:
+        distance = manhattanHeuristic(position, food)
+        distance.append(distances)
+
+    return max(distances)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -504,9 +527,14 @@ class ClosestDotSearchAgent(SearchAgent):
         startPosition = gameState.getPacmanPosition()
         food = gameState.getFood()
         walls = gameState.getWalls()
+        
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
+
+        path = search.aStarSearch(problem, manhattanHeuristic)
+
+        return path
         util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
