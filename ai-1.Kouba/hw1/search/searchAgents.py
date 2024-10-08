@@ -296,6 +296,9 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
+
+        return(self.startingPosition, set(self.corners))
+
         util.raiseNotDefined()
 
     def isGoalState(self, state: Any):
@@ -303,6 +306,14 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
+
+        current_position, remaining_corners = state
+
+        if not remaining_corners:
+            return True
+        else:
+            return False
+
         util.raiseNotDefined()
 
     def getSuccessors(self, state: Any):
@@ -317,15 +328,26 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
+
+        current_position, remaining_corners = state
+
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
+            x, y = current_position
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+
+        if not hitsWall:
+            next_position = (nextx, nexty)
+            new_remaining_corners = set(remaining_corners)
+            if next_position in self.corners and next_position in new_remaining_corners:
+                new_remaining_corners.remove(next_position)
+
+            successors.append((next_position, new_remaining_corners), action, 1)
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -521,6 +543,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
+
+        if not y:
+            return True
+        return False
+
         util.raiseNotDefined()
 
 def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
