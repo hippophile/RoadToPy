@@ -387,6 +387,9 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
 
     current_position, remaining_corners = state
 
+    if problem.isGoalState(state):
+        return 0 
+
     if not remaining_corners:
         return 0 
     
@@ -429,18 +432,37 @@ class FoodSearchProblem:
         return state[1].count() == 0
 
     def getSuccessors(self, state):
-        "Returns successor states, the actions they require, and a cost of 1."
+        """Returns successor states, the actions they require, and a cost of 1."""
         successors = []
-        self._expanded += 1 # DO NOT CHANGE
+        current_position, visited_corners = state
+        self._expanded += 1  # DO NOT CHANGE
+    
         for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            x,y = state[0]
+            x, y = current_position
             dx, dy = Actions.directionToVector(direction)
             nextx, nexty = int(x + dx), int(y + dy)
+        
+            # Check if the new position hits a wall.
             if not self.walls[nextx][nexty]:
-                nextFood = state[1].copy()
-                nextFood[nextx][nexty] = False
-                successors.append( ( ((nextx, nexty), nextFood), direction, 1) )
+                next_position = (nextx, nexty)
+            
+                # Copy the visited corners list to avoid mutating the original.
+                new_visited_corners = list(visited_corners)
+            
+                # Check if the new position is a corner, and if so, mark it as visited.
+                if next_position in self.corners:
+                    corner_index = self.corners.index(next_position)
+                    new_visited_corners[corner_index] = True
+            
+                # Convert back to a tuple to make it hashable.
+                new_visited_corners = tuple(new_visited_corners)
+            
+                # Add the successor with a cost of 1.
+                successors.append(((next_position, new_visited_corners), direction, 1))
+    
         return successors
+
+
 
     def getCostOfActions(self, actions):
         """Returns the cost of a particular sequence of actions.  If those actions
@@ -462,6 +484,8 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
 
+
+# TODO
 def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -527,12 +551,11 @@ class ClosestDotSearchAgent(SearchAgent):
         startPosition = gameState.getPacmanPosition()
         food = gameState.getFood()
         walls = gameState.getWalls()
-        
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
 
-        path = search.aStarSearch(problem, manhattanHeuristic)
+        path = search.breadthFirstSearch(problem)
 
         return path
         util.raiseNotDefined()
@@ -572,9 +595,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
 
         "*** YOUR CODE HERE ***"
 
-        if not y:
-            return True
-        return False
+        return self.food[x][y]
 
         util.raiseNotDefined()
 

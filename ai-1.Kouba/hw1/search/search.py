@@ -120,33 +120,43 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-
+    # Create a queue for states to explore (FIFO).
     fringe = util.Queue()
+            
+    # Get the initial state of the problem and add it to the queue with an empty path.
+    start_state = problem.getStartState()
+    fringe.push((start_state, []))  # state, path
 
-    start_state = problem.getStartState()  # we need the first state and an empty path
+    # Create a set to store visited states.
+    visited = set()
 
-    fringe.push((start_state, [])) # state , path
-
-    visited = set() # a set to store the visited states
-
+    # Continue searching while there are states in the queue.
     while not fringe.isEmpty():
-        state, path = fringe.pop() # tuple
+        # Pop the next state from the queue and its corresponding path.
+        state, path = fringe.pop()
 
+        # Check if the current state is a goal. If so, return the path.
         if problem.isGoalState(state):
             return path
-        
+
+        # If the state has not been visited yet, add it to the set of visited states.
         if state not in visited:
             visited.add(state)
 
-            # that's were the magic is happening
-        for successor, action, stepCost in problem.getSuccessors(state):  # stepCost doesn't do anything but is essentiall, but is needed for the getSuccessors fun
-            if successor not in visited:
-                visited.add(successor)
-                new_path = path + [action] 
-                fringe.push((successor, new_path))
+            # Explore the successors of the current state.
+            for successor, action, _ in problem.getSuccessors(state):
+                # Check if the successor has not been visited already.
+                if frozenset(state) not in visited:
+                    # Create the new path by adding the current action to the existing path.
+                    new_path = path + [action]
+                    
+                    # Add the successor and the updated path to the queue for further exploration.
+                    fringe.push((successor, new_path))
 
-    return[]
+    # If no solution is found, return an empty list.
+    # This could occur if the problem has no goal state or is not fully connected.
+    return []
+
 
     util.raiseNotDefined()
 
