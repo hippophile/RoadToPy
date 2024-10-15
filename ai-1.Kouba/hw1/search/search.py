@@ -146,7 +146,7 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
             # Explore the successors of the current state.
             for successor, action, _ in problem.getSuccessors(state):
                 # Check if the successor has not been visited already.
-                if frozenset(state) not in visited:
+                if successor not in visited:
                     # Create the new path by adding the current action to the existing path.
                     new_path = path + [action]
                     

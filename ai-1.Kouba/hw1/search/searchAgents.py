@@ -297,7 +297,7 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
 
-        return(self.startingPosition, set(self.corners))
+        return(self.startingPosition, tuple(self.corners))
 
         util.raiseNotDefined()
 
@@ -330,6 +330,7 @@ class CornersProblem(search.SearchProblem):
         successors = []
 
         current_position, remaining_corners = state
+        self._expanded += 1 # DO NOT CHANGE
 
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
@@ -337,19 +338,20 @@ class CornersProblem(search.SearchProblem):
             x, y = current_position
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            hitsWall = self.walls[nextx][nexty]
+            #hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
 
-        if not hitsWall:
-            next_position = (nextx, nexty)
-            new_remaining_corners = set(remaining_corners)
-            if next_position in self.corners and next_position in new_remaining_corners:
-                new_remaining_corners.remove(next_position)
+            if not self.walls[nextx][nexty]:
+                next_position = (nextx, nexty)
+                new_remaining_corners = set(remaining_corners)
+            
+                if next_position in new_remaining_corners:
+                    new_remaining_corners.remove(next_position)
 
-            successors.append((next_position, new_remaining_corners), action, 1)
+                successors.append(((next_position, tuple(new_remaining_corners)), action, 1))
 
-        self._expanded += 1 # DO NOT CHANGE
+        
         return successors
 
     def getCostOfActions(self, actions):
@@ -434,7 +436,7 @@ class FoodSearchProblem:
     def getSuccessors(self, state):
         """Returns successor states, the actions they require, and a cost of 1."""
         successors = []
-        current_position, visited_corners = state
+        current_position, foodGrid = state
         self._expanded += 1  # DO NOT CHANGE
     
         for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
@@ -446,20 +448,11 @@ class FoodSearchProblem:
             if not self.walls[nextx][nexty]:
                 next_position = (nextx, nexty)
             
-                # Copy the visited corners list to avoid mutating the original.
-                new_visited_corners = list(visited_corners)
-            
-                # Check if the new position is a corner, and if so, mark it as visited.
-                if next_position in self.corners:
-                    corner_index = self.corners.index(next_position)
-                    new_visited_corners[corner_index] = True
-            
-                # Convert back to a tuple to make it hashable.
-                new_visited_corners = tuple(new_visited_corners)
-            
-                # Add the successor with a cost of 1.
-                successors.append(((next_position, new_visited_corners), direction, 1))
-    
+                new_foodGrid = foodGrid.copy()
+                new_foodGrid[nextx][nexty] = False
+
+                successors.append(((next_position, new_foodGrid), direction, 1))
+
         return successors
 
 
