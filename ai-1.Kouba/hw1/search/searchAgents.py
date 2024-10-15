@@ -398,8 +398,9 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     distances = []
 
     for corner in remaining_corners:
-        distance = manhattanHeuristic(current_position, corner)  # OR distance = aStarDistance(current_position, corner, walls)?
-        distance.append(distances)
+                            # that is the x of pacman   and     that is the y of pacman
+        distance = abs(current_position[0] - corner[0]) + abs(current_position[1] - corner[1])
+        distances.append(distance)
 
     return max(distances) # Default to trivial solution
 
