@@ -479,7 +479,6 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchType = FoodSearchProblem
 
 
-# TODO
 def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -514,8 +513,8 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     distances = []
 
     for food in food_positions:
-        distance = manhattanHeuristic(position, food)
-        distance.append(distances)
+        distance = abs(position[0] - food[0]) + abs(position[1] - food[1])
+        distances.append(distance)
 
     return max(distances)
 
