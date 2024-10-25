@@ -80,7 +80,7 @@ class ReflexAgent(Agent):
 
         # let's find the smallest distance between pacman and the food 
         foodList = newFood.asList()
-        if len(foodList) > 0:
+        if foodList:
             minFoodDistance = min([manhattanDistance(newPos, food)for food in foodList])
             # the closer, the higher the reward
             score += 10.0 / (minFoodDistance + 1)
@@ -91,25 +91,26 @@ class ReflexAgent(Agent):
             # distance between Pacman and the ghost
             distanceToGhost = manhattanDistance(newPos, ghostPos)
 
-            # if ghost not scared 
-            if newScaredTimes[i] == 0:
-
-                # safe distance = small penalty
-                if distanceToGhost > 2:
-                    score -= 10.0 / (distanceToGhost + 1)
-
-                # not safe distance = large penalty    
-                elif distanceToGhost <= 2:
-                    score -= 1000   
-
-            # if pacman is towards scared ghost == reward 
-            elif newScaredTimes[i] > 0:
+            # if ghost are scared 
+            if newScaredTimes[i] > 0:
+                
                 score += 200 / (distanceToGhost + 1)
+            else:
+                # large penalty for beeing too close to a ghost
+                if distanceToGhost < 2:
+                    score -= 1000
+                else:
+                    # small penalty for being not too close to a ghost
+                    score -= 10.0 / (distanceToGhost + 1) 
 
+        # small penalty for the rest of the food
+        score -= 4 * len(foodList)
 
-        # Penalize based on how much food is left
-        score -= 4 * len(foodList)  
-
+        # Encourage collection of capsules
+        capsules = successorGameState.getCapsules()
+        if capsules:
+            minCapsuleDistance = min(manhattanDistance(newPos, capsule) for capsule in capsules)
+            score += 20.0 / (minCapsuleDistance + 1)
 
         return score
 
@@ -172,7 +173,35 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+
+        legalMoves = gameState.getLegalActions(0)
+
+        scores = [self.minimax(gameState.generateSuccessor(0, action), 0, 1) for action in legalMoves]
+
+        bestScore = max(scores)
+
+        bestActions = [action for action, score in zip(legalMoves, scores) if score == bestScore]
+
+        return bestActions[0]
+
         util.raiseNotDefined()
+
+    def minimax(self, state, depth, agentIndex):
+
+        if depth == self.depth or state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+        
+        if agentIndex == 0:
+            return max(self.minimax(state.generateSuccessor(agentIndex, action), depth, 1)for action in state.getLegalActions(agentIndex))
+
+        else:
+            nextAgent = agentIndex + 1
+            if nextAgent >= state.getNumAgents():
+                nextAgent = 0
+                depth += 1
+
+            return min(self.minimax(state.generateSuccessor(agentIndex, action), depth, nextAgent)
+                       for action in state.getLegalActions(agentIndex))
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
