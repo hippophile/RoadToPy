@@ -120,6 +120,7 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
     """Search the shallowest nodes in the search tree first."""
+    "*** YOUR CODE HERE ***"
     # Create a queue for states to explore (FIFO).
     fringe = util.Queue()
             

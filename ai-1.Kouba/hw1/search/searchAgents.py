@@ -338,14 +338,15 @@ class CornersProblem(search.SearchProblem):
             x, y = current_position
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            #hitsWall = self.walls[nextx][nexty]
+            #hitsWall = self.walls[nextx][nexty]   ////  απλά με μπέρδευε στο τι είναι καν το hitsWall και είπα να το έχω έτσι για ευκολία ///
 
             "*** YOUR CODE HERE ***"
 
             if not self.walls[nextx][nexty]:
-                next_position = (nextx, nexty)
-                new_remaining_corners = set(remaining_corners)
+                next_position = (nextx, nexty)  # define a new position
+                new_remaining_corners = set(remaining_corners)  # that's a copy of the set of remaining corners
             
+                # if it is a corner, remove it
                 if next_position in new_remaining_corners:
                     new_remaining_corners.remove(next_position)
 
