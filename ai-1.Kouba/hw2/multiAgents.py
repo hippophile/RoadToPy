@@ -96,6 +96,7 @@ class ReflexAgent(Agent):
                 
                 score += 200 / (distanceToGhost + 1)
             else:
+                
                 # large penalty for beeing too close to a ghost
                 if distanceToGhost < 2:
                     score -= 1000
@@ -104,13 +105,13 @@ class ReflexAgent(Agent):
                     score -= 10.0 / (distanceToGhost + 1) 
 
         # small penalty for the rest of the food
-        score -= 4 * len(foodList)
+        score -= len(foodList)
 
         # Encourage collection of capsules
         capsules = successorGameState.getCapsules()
         if capsules:
             minCapsuleDistance = min(manhattanDistance(newPos, capsule) for capsule in capsules)
-            score += 20.0 / (minCapsuleDistance + 1)
+            score += 200.0 / (minCapsuleDistance + 1)
 
         return score
 
@@ -180,11 +181,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         bestScore = max(scores)
 
-        bestActions = [action for action, score in zip(legalMoves, scores) if score == bestScore]
+        bestIndex = scores.index(bestScore)
 
-        return bestActions[0]
-
-        util.raiseNotDefined()
+        return legalMoves[bestIndex]
 
     def minimax(self, state, depth, agentIndex):
 
