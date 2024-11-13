@@ -226,7 +226,41 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             alpha = max(alpha, max_value)
         
         return best_action
-        util.raiseNotDefined()
+
+    def max_value(self, gameState, depth, alpha, beta):
+        # Termination condition
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        
+        value = float("-inf")
+        for action in gameState.getLegalActions(0):
+            value = max(value, self.min_value(gameState.generateSuccessor(0, action), 1, depth, alpha, beta))
+            # Pruning
+            if value > beta:
+                return value
+            alpha = max(alpha, value)
+        
+        return value
+
+    def min_value(self, gameState, agentIndex, depth, alpha, beta):
+        # Termination condition
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        
+        value = float("inf")
+        for action in gameState.getLegalActions(agentIndex):
+            # Check if it's the last ghost, then go back to Pacman (agentIndex 0) and increase depth
+            if agentIndex == gameState.getNumAgents() - 1:
+                value = min(value, self.max_value(gameState.generateSuccessor(agentIndex, action), depth + 1, alpha, beta))
+            else:
+                value = min(value, self.min_value(gameState.generateSuccessor(agentIndex, action), agentIndex + 1, depth, alpha, beta))
+            
+            # Pruning
+            if value < alpha:
+                return value
+            beta = min(beta, value)
+        
+        return value
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -242,8 +276,62 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
+        best_score = float("-inf")
+        best_action = None
 
-        util.raiseNotDefined()
+        # Αναζητάμε την καλύτερη ενέργεια για τον Pacman (agentIndex = 0)
+        for action in gameState.getLegalActions(0):
+            value = self.expectimax(gameState.generateSuccessor(0, action), 1, 0)
+            if value > best_score:
+                best_score = value
+                best_action = action
+
+        return best_action
+
+    def expectimax(self, gameState, agentIndex, depth):
+        """
+        Recursive function implementing the expectimax algorithm.
+        """
+        # Τερματική συνθήκη: Αν φτάσουμε στο μέγιστο βάθος ή το παιχνίδι τελείωσε
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        # Αν είναι η σειρά του Pacman (agentIndex = 0)
+        if agentIndex == 0:
+            return self.max_value(gameState, depth)
+        else:
+            return self.exp_value(gameState, agentIndex, depth)
+
+    def max_value(self, gameState, depth):
+        """
+        Επιστρέφει τη μέγιστη τιμή για τον Pacman (agentIndex = 0).
+        """
+        value = float("-inf")
+        for action in gameState.getLegalActions(0):
+            value = max(value, self.expectimax(gameState.generateSuccessor(0, action), 1, depth))
+        return value
+
+    def exp_value(self, gameState, agentIndex, depth):
+        """
+        Υπολογίζει την αναμενόμενη τιμή για τα φαντάσματα (agentIndex > 0).
+        """
+        actions = gameState.getLegalActions(agentIndex)
+        if not actions:
+            return self.evaluationFunction(gameState)
+
+        total_value = 0
+        probability = 1 / len(actions)
+
+        for action in actions:
+            successor = gameState.generateSuccessor(agentIndex, action)
+            
+            # Αν είναι ο τελευταίος agent (φαντάσμα), προχωράμε στον Pacman και αυξάνουμε το βάθος
+            if agentIndex == gameState.getNumAgents() - 1:
+                total_value += probability * self.expectimax(successor, 0, depth + 1)
+            else:
+                total_value += probability * self.expectimax(successor, agentIndex + 1, depth)
+
+        return total_value
 
 def betterEvaluationFunction(currentGameState: GameState):
     """
@@ -253,6 +341,51 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
+
+        # Βασικό σκορ της τρέχουσας κατάστασης
+    score = currentGameState.getScore()
+
+    # Θέση του Pacman
+    pacmanPos = currentGameState.getPacmanPosition()
+
+    # Λίστα με το υπόλοιπο φαγητό
+    foodList = currentGameState.getFood().asList()
+
+    # Φαντάσματα και οι φοβισμένοι χρόνοι τους
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+
+    # Υπολογισμός απόστασης από το πλησιέστερο φαγητό
+    if foodList:
+        minFoodDistance = min(manhattanDistance(pacmanPos, food) for food in foodList)
+        score += 10.0 / (minFoodDistance + 1)  # Προσθήκη score για κοντινό φαγητό
+
+    # Υπολογισμός απόστασης από τα φαντάσματα
+    for ghostIndex, ghostState in enumerate(ghostStates):
+        ghostPos = ghostState.getPosition()
+        distanceToGhost = manhattanDistance(pacmanPos, ghostPos)
+
+        if scaredTimes[ghostIndex] > 0:
+            # Αν το φάντασμα είναι φοβισμένο, το επιδιώκουμε
+            score += 200 / (distanceToGhost + 1)
+        else:
+            # Αν το φάντασμα δεν είναι φοβισμένο, το αποφεύγουμε
+            if distanceToGhost < 2:
+                score -= 1000  # Πολύ μεγάλο penalty αν είναι πολύ κοντά
+            else:
+                score -= 10.0 / (distanceToGhost + 1)  # Μικρότερο penalty αν είναι μακριά
+
+    # Υπολογισμός capsules (ισχύει ως επιπλέον κίνητρο)
+    capsules = currentGameState.getCapsules()
+    if capsules:
+        minCapsuleDistance = min(manhattanDistance(pacmanPos, capsule) for capsule in capsules)
+        score += 100.0 / (minCapsuleDistance + 1)
+
+    # Προσθήκη penalty για το υπόλοιπο φαγητό (όσο λιγότερο, τόσο καλύτερα)
+    score -= len(foodList) * 4
+
+    return score
+
     util.raiseNotDefined()
 
 # Abbreviation
