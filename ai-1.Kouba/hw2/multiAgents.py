@@ -48,7 +48,8 @@ class ReflexAgent(Agent):
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
 
-        "Add more of your code here if you want to"
+        "Add more of your code here if you want to" 
+        "-NO"
 
         return legalMoves[chosenIndex]
 
@@ -107,7 +108,7 @@ class ReflexAgent(Agent):
         # small penalty for the rest of the food
         score -= len(foodList)
 
-        # Encourage collection of capsules
+        # encourage collection of capsules
         capsules = successorGameState.getCapsules()
         if capsules:
             minCapsuleDistance = min(manhattanDistance(newPos, capsule) for capsule in capsules)
@@ -141,7 +142,7 @@ class MultiAgentSearchAgent(Agent):
     """
 
     def __init__(self, evalFn = 'scoreEvaluationFunction', depth = '2'):
-        self.index = 0 # Pacman is always agent index 0
+        self.index = 0 # pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
 
@@ -187,12 +188,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def minimax(self, state, depth, agentIndex):
 
+        # if we find the max depth or end game there is no point to continue 
         if depth == self.depth or state.isWin() or state.isLose():
             return self.evaluationFunction(state)
         
         if agentIndex == 0:
             return max(self.minimax(state.generateSuccessor(agentIndex, action), depth, 1)for action in state.getLegalActions(agentIndex))
 
+        # ghost turn
         else:
             nextAgent = agentIndex + 1
             if nextAgent >= state.getNumAgents():
@@ -218,6 +221,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         best_action = None
         max_value = float("-inf")
 
+        # searching for the best pacman action 
         for action in gameState.getLegalActions(0):
             value = self.min_value(gameState.generateSuccessor(0, action), 1, 0, alpha, beta)
             if value > max_value:
@@ -228,14 +232,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return best_action
 
     def max_value(self, gameState, depth, alpha, beta):
-        # Termination condition
+        # termination condition
         if depth == self.depth or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
         
         value = float("-inf")
         for action in gameState.getLegalActions(0):
             value = max(value, self.min_value(gameState.generateSuccessor(0, action), 1, depth, alpha, beta))
-            # Pruning
+            # pruning
             if value > beta:
                 return value
             alpha = max(alpha, value)
@@ -243,19 +247,19 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return value
 
     def min_value(self, gameState, agentIndex, depth, alpha, beta):
-        # Termination condition
+        # termination condition (again)
         if gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
         
         value = float("inf")
         for action in gameState.getLegalActions(agentIndex):
-            # Check if it's the last ghost, then go back to Pacman (agentIndex 0) and increase depth
+            # check if it is the last ghost, then go back to Pacman and increase the depth
             if agentIndex == gameState.getNumAgents() - 1:
                 value = min(value, self.max_value(gameState.generateSuccessor(agentIndex, action), depth + 1, alpha, beta))
             else:
                 value = min(value, self.min_value(gameState.generateSuccessor(agentIndex, action), agentIndex + 1, depth, alpha, beta))
             
-            # Pruning
+            # pruning
             if value < alpha:
                 return value
             beta = min(beta, value)
@@ -279,7 +283,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         best_score = float("-inf")
         best_action = None
 
-        # Αναζητάμε την καλύτερη ενέργεια για τον Pacman (agentIndex = 0)
+        # searching for the best pacman action (again)
         for action in gameState.getLegalActions(0):
             value = self.expectimax(gameState.generateSuccessor(0, action), 1, 0)
             if value > best_score:
@@ -289,32 +293,26 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return best_action
 
     def expectimax(self, gameState, agentIndex, depth):
-        """
-        Recursive function implementing the expectimax algorithm.
-        """
-        # Τερματική συνθήκη: Αν φτάσουμε στο μέγιστο βάθος ή το παιχνίδι τελείωσε
+        
+        # termination condition (again)
         if depth == self.depth or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
 
-        # Αν είναι η σειρά του Pacman (agentIndex = 0)
+        # if Pacman plays (agentIndex = 0)
         if agentIndex == 0:
             return self.max_value(gameState, depth)
         else:
             return self.exp_value(gameState, agentIndex, depth)
 
     def max_value(self, gameState, depth):
-        """
-        Επιστρέφει τη μέγιστη τιμή για τον Pacman (agentIndex = 0).
-        """
+        
         value = float("-inf")
         for action in gameState.getLegalActions(0):
             value = max(value, self.expectimax(gameState.generateSuccessor(0, action), 1, depth))
         return value
 
     def exp_value(self, gameState, agentIndex, depth):
-        """
-        Υπολογίζει την αναμενόμενη τιμή για τα φαντάσματα (agentIndex > 0).
-        """
+        
         actions = gameState.getLegalActions(agentIndex)
         if not actions:
             return self.evaluationFunction(gameState)
@@ -325,7 +323,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         for action in actions:
             successor = gameState.generateSuccessor(agentIndex, action)
             
-            # Αν είναι ο τελευταίος agent (φαντάσμα), προχωράμε στον Pacman και αυξάνουμε το βάθος
+            # if it is the last agent, we increase the depth
             if agentIndex == gameState.getNumAgents() - 1:
                 total_value += probability * self.expectimax(successor, 0, depth + 1)
             else:
@@ -337,51 +335,53 @@ def betterEvaluationFunction(currentGameState: GameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
-
     DESCRIPTION: <write something here so we know what you did>
+
+    <LET'S balance food eating, ghost avoidance, and capsule hunting.
+    I reward Pacman for being close to food and capsules, while I penalize way too heavily
+    for being close to active ghosts. If ghosts are scared, Pacman is
+    wants to chase them of course. I also give a "tiny" penalty for
+    remaining food, motivating Pacman to clear the board efficiently (just like a slave)>
     """
+
     "*** YOUR CODE HERE ***"
 
-        # Βασικό σκορ της τρέχουσας κατάστασης
     score = currentGameState.getScore()
 
-    # Θέση του Pacman
+    # pos = position
     pacmanPos = currentGameState.getPacmanPosition()
 
-    # Λίστα με το υπόλοιπο φαγητό
     foodList = currentGameState.getFood().asList()
 
-    # Φαντάσματα και οι φοβισμένοι χρόνοι τους
     ghostStates = currentGameState.getGhostStates()
     scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
 
-    # Υπολογισμός απόστασης από το πλησιέστερο φαγητό
+    # where is the closest food?
     if foodList:
         minFoodDistance = min(manhattanDistance(pacmanPos, food) for food in foodList)
-        score += 10.0 / (minFoodDistance + 1)  # Προσθήκη score για κοντινό φαγητό
+        score += 10.0 / (minFoodDistance + 1)  # the closer to food the bigger the reward
 
-    # Υπολογισμός απόστασης από τα φαντάσματα
+    # where are the ghosts (in relation to pacman)
     for ghostIndex, ghostState in enumerate(ghostStates):
         ghostPos = ghostState.getPosition()
         distanceToGhost = manhattanDistance(pacmanPos, ghostPos)
 
         if scaredTimes[ghostIndex] > 0:
-            # Αν το φάντασμα είναι φοβισμένο, το επιδιώκουμε
+            # IT'S SCARED ATTACK
             score += 200 / (distanceToGhost + 1)
         else:
-            # Αν το φάντασμα δεν είναι φοβισμένο, το αποφεύγουμε
+            # it's NOT scared... RUN
             if distanceToGhost < 2:
-                score -= 1000  # Πολύ μεγάλο penalty αν είναι πολύ κοντά
+                score -= 1000 
             else:
-                score -= 10.0 / (distanceToGhost + 1)  # Μικρότερο penalty αν είναι μακριά
+                score -= 10.0 / (distanceToGhost + 1)  # I think we lost them but let's be sure about it
 
-    # Υπολογισμός capsules (ισχύει ως επιπλέον κίνητρο)
     capsules = currentGameState.getCapsules()
     if capsules:
         minCapsuleDistance = min(manhattanDistance(pacmanPos, capsule) for capsule in capsules)
-        score += 100.0 / (minCapsuleDistance + 1)
+        score += 100.0 / (minCapsuleDistance + 1) # make THEM run from YOU
 
-    # Προσθήκη penalty για το υπόλοιπο φαγητό (όσο λιγότερο, τόσο καλύτερα)
+    # c'mon it's your last "strength"
     score -= len(foodList) * 4
 
     return score
