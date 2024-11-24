@@ -16,6 +16,8 @@ lab_courses = df[df['Εργαστήριο (TRUE/FALSE)'] == True]['Μάθημα'
 # Ορισμός των μεταβλητών και των τομέων
 
 variables = df['Μάθημα'].tolist()
+# Δημιουργία ξεχωριστών μεταβλητών για θεωρία και εργαστήριο
+
 
 days = list(range(1, 22))  # Ημέρες εξεταστικής (1-21)
 periods = ['9-12', '12-3', '3-6']  # Χρονικές περίοδοι
@@ -51,6 +53,11 @@ def constraints(course1, time1, course2, time2):
     if course1 in lab_courses and period1 == '3-6':
         return False
     
+    # Περιορισμός: Αν το μάθημα είναι εργαστήριο, το επόμενο slot να είναι κενό
+    if course1 in lab_courses:
+        if day1 == day2 and periods.index(period2) == periods.index(period1) + 1:
+            return False
+                
     return True
 
 # ---------------------------4. CSP------------------------------
@@ -63,7 +70,7 @@ solution_fc = backtracking_search(problem, select_unassigned_variable=mrv, infer
 
 # ---------------------------6. FC------------------------------
 
-solution_fc = backtracking_search(problem, inference=forward_checking)
+#solution_fc = backtracking_search(problem, inference=forward_checking)
 print("Δοκιμάζεται Forward Checking:")
 
 if solution_fc:
@@ -81,12 +88,15 @@ if solution_fc:
     # Ταξινόμηση με βάση τη μέρα και τη σειρά ώρας
     schedule = schedule.sort_values(by=['Μέρα', 'Ώρα_Σειρά']).drop(columns=['Ώρα_Σειρά'])
 
-# Δημιουργία μορφής: "Μέρα Χ: Ώρα: Μάθημα (Δυσκολο)"
-    lines = [
-        f"Μέρα {row['Μέρα']}: {row['Ώρα']}: {row['Μάθημα']}" + 
-        (" (ΔΥΣΚΟΛΟ)" if row['Μάθημα'] in difficult_courses else "")
-        for _, row in schedule.iterrows()
-    ]
+    lines = []
+    for day, group in schedule.groupby('Μέρα'):
+        lines.append(f"Μέρα {day}:")  # Επικεφαλίδα για την ημέρα
+        for _, row in group.iterrows():
+            lines.append(f"    {row['Ώρα']}: {row['Μάθημα']}" +
+                         (" (ΔΥΣΚΟΛΟ)" if row['Μάθημα'] in difficult_courses else "") +
+                         (" \n         +ΕΡΓΑΣΤΗΡΙΟ " if row['Μάθημα'] in lab_courses else ""))
+
+
 
     # Αποθήκευση σε αρχείο .txt
     with open("fc_schedule.txt", "w", encoding="utf-8") as file:
@@ -95,11 +105,72 @@ else:
     print("Δεν βρέθηκε λύση για το πρόβλημα.")
 
 
-print(lab_courses)
+#print(lab_courses)
+
 # 3. Χρήση MAC
-#solution_mac = backtracking_search(problem, inference=mac)
+solution_mac = backtracking_search(problem, inference=mac)
 #print("Λύση με MAC:", solution_mac)
+if solution_mac:
+    print("Η λύση ήταν επιτυχής! Αποθηκεύτηκε στο αρχείο 'mac_schedule.txt'.")
+
+    # Μετατροπή της λύσης σε DataFrame
+    schedule = pd.DataFrame(
+        [{'Μέρα': day, 'Ώρα': time, 'Μάθημα': course} for course, (day, time) in solution_fc.items()]
+    )
+
+    # Ορισμός της σειράς ταξινόμησης για τις ώρες
+    time_order = {'9-12': 0, '12-3': 1, '3-6': 2}
+    schedule['Ώρα_Σειρά'] = schedule['Ώρα'].map(time_order)
+
+    # Ταξινόμηση με βάση τη μέρα και τη σειρά ώρας
+    schedule = schedule.sort_values(by=['Μέρα', 'Ώρα_Σειρά']).drop(columns=['Ώρα_Σειρά'])
+
+    lines = []
+    for day, group in schedule.groupby('Μέρα'):
+        lines.append(f"Μέρα {day}:")  # Επικεφαλίδα για την ημέρα
+        for _, row in group.iterrows():
+            lines.append(f"    {row['Ώρα']}: {row['Μάθημα']}" +
+                         (" (ΔΥΣΚΟΛΟ)" if row['Μάθημα'] in difficult_courses else "") +
+                         (" \n         +ΕΡΓΑΣΤΗΡΙΟ " if row['Μάθημα'] in lab_courses else ""))
+
+
+
+    # Αποθήκευση σε αρχείο .txt
+    with open("mac_schedule.txt", "w", encoding="utf-8") as file:
+        file.write("\n".join(lines))
+else:
+    print("Δεν βρέθηκε λύση για το πρόβλημα.")
 
 # 4. Χρήση Min-Conflicts
-#solution_min_conflicts = min_conflicts(problem)
+solution_min_conflicts = min_conflicts(problem)
 #print("Λύση με Min-Conflicts:", solution_min_conflicts)
+if solution_min_conflicts:
+    print("Η λύση ήταν επιτυχής! Αποθηκεύτηκε στο αρχείο 'mc_schedule.txt'.")
+
+    # Μετατροπή της λύσης σε DataFrame
+    schedule = pd.DataFrame(
+        [{'Μέρα': day, 'Ώρα': time, 'Μάθημα': course} for course, (day, time) in solution_fc.items()]
+    )
+
+    # Ορισμός της σειράς ταξινόμησης για τις ώρες
+    time_order = {'9-12': 0, '12-3': 1, '3-6': 2}
+    schedule['Ώρα_Σειρά'] = schedule['Ώρα'].map(time_order)
+
+    # Ταξινόμηση με βάση τη μέρα και τη σειρά ώρας
+    schedule = schedule.sort_values(by=['Μέρα', 'Ώρα_Σειρά']).drop(columns=['Ώρα_Σειρά'])
+
+    lines = []
+    for day, group in schedule.groupby('Μέρα'):
+        lines.append(f"Μέρα {day}:")  # Επικεφαλίδα για την ημέρα
+        for _, row in group.iterrows():
+            lines.append(f"    {row['Ώρα']}: {row['Μάθημα']}" +
+                         (" (ΔΥΣΚΟΛΟ)" if row['Μάθημα'] in difficult_courses else "") +
+                         (" \n         +ΕΡΓΑΣΤΗΡΙΟ " if row['Μάθημα'] in lab_courses else ""))
+
+
+
+    # Αποθήκευση σε αρχείο .txt
+    with open("mc_schedule.txt", "w", encoding="utf-8") as file:
+        file.write("\n".join(lines))
+else:
+    print("Δεν βρέθηκε λύση για το πρόβλημα.")
