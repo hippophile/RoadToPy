@@ -410,6 +410,10 @@ def backtracking_search(csp, select_unassigned_variable=first_unassigned_variabl
         if len(assignment) == len(csp.variables):
             return assignment
         var = select_unassigned_variable(assignment, csp)
+
+        # Καταγραφή της επέκτασης κόμβου
+        csp.node_expansions += 1
+
         for value in order_domain_values(var, assignment, csp):
             if 0 == csp.nconflicts(var, value, assignment):
                 csp.assign(var, value, assignment)
@@ -440,6 +444,9 @@ def min_conflicts(csp, max_steps=100000):
         csp.assign(var, val, current)
     # Now repeatedly choose a random conflicted variable and change it
     for i in range(max_steps):
+
+        csp.node_expansions += 1
+
         conflicted = csp.conflicted_vars(current)
         if not conflicted:
             return current
@@ -632,7 +639,7 @@ def queen_constraint(A, a, B, b):
 
 
 class NQueensCSP(CSP):
-    """
+    r"""
     Make a CSP for the nQueens problem for search with min_conflicts.
     Suitable for large n, it uses only data structures of size O(n).
     Think of placing queens one per column, from left to right.

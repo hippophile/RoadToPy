@@ -107,8 +107,30 @@ else:
 
 #print(lab_courses)
 
-# 3. Χρήση MAC
-solution_mac = backtracking_search(problem, inference=mac)
+# ---------------------------7. Dom/wdeg--------------------------
+
+# Βάρη για τις μεταβλητές (αρχικοποίηση)
+weights = {var: 1 for var in variables}
+
+# Υλοποίηση της στρατηγικής dom/wdeg
+def dom_wdeg(assignment, csp):
+    def weight(var):
+        # Υπολογισμός του dom/wdeg για κάθε μεταβλητή
+        dom_size = len(csp.curr_domains[var]) if csp.curr_domains else len(csp.domains[var])
+        return dom_size / weights[var]
+
+    # Επιλέγουμε τη μεταβλητή με το ελάχιστο dom/wdeg
+    return min((v for v in csp.variables if v not in assignment), key=weight)
+
+# Ενημέρωση βαρών στους περιορισμούς
+def increment_weights(csp, var, assignment):
+    for neighbor in csp.neighbors[var]:
+        if neighbor not in assignment:
+            weights[neighbor] += 1
+
+# ---------------------------8. MAC------------------------------
+
+solution_mac = backtracking_search(problem, select_unassigned_variable=dom_wdeg, inference=mac)
 #print("Λύση με MAC:", solution_mac)
 if solution_mac:
     print("Η λύση ήταν επιτυχής! Αποθηκεύτηκε στο αρχείο 'mac_schedule.txt'.")
@@ -141,9 +163,10 @@ if solution_mac:
 else:
     print("Δεν βρέθηκε λύση για το πρόβλημα.")
 
-# 4. Χρήση Min-Conflicts
-solution_min_conflicts = min_conflicts(problem)
-#print("Λύση με Min-Conflicts:", solution_min_conflicts)
+# ---------------------------9. Min_Conflicts------------------------------
+
+solution_min_conflicts = min_conflicts(problem, max_steps=100000)
+
 if solution_min_conflicts:
     print("Η λύση ήταν επιτυχής! Αποθηκεύτηκε στο αρχείο 'mc_schedule.txt'.")
 

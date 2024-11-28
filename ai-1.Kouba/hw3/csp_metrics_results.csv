@@ -1,0 +1,4 @@
+Algorithm,Execution Time (s),Nodes Expanded,Constraints Checked
+Forward Checking,0.14753985404968262,54,98024
+MAC,0.021173954010009766,54,7155
+Min-Conflicts,0.8955917358398438,48,490356
